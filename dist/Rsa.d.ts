@@ -1,10 +1,13 @@
 declare class Rsa {
+    private usingOldRsa;
     private rsaPublicKey;
     private rsaPrivateKey;
-    constructor(publicKeyPath: string, privateKeyPath: string);
-    rsaEncrypt: (data: string) => string;
-    rsaEncryptShort: (data: string) => string;
-    rsaDecrypt: (data: string) => string;
-    rsaDecryptShort(data: string): string;
+    private oldRsaPublic;
+    private oldRsaPrivate;
+    constructor(publicKeyPath: string, privateKeyPath: string, usingOldRsa?: boolean);
+    rsaEncrypt: (data: string) => string | undefined;
+    rsaEncryptShort: (data: string) => string | undefined;
+    rsaDecrypt: (data: string) => string | undefined;
+    rsaDecryptShort(data: string): string | undefined;
 }
 export default Rsa;

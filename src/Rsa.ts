@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { publicEncrypt, privateDecrypt } from 'crypto';
+import NodeRSA from 'node-rsa';
 
 const MULTI_ENCRYPTION_PART_PREFIX = 'mutipart';
 
@@ -8,12 +9,21 @@ class Rsa {
   private rsaPublicKey: string;
   private rsaPrivateKey: string;
 
+  private oldRsaPublic: NodeRSA | undefined;
+  private oldRsaPrivate: NodeRSA | undefined;
+
   constructor(
     publicKeyPath: string,
     privateKeyPath: string,
+    private usingOldRsa: boolean = false,
   ) {
     this.rsaPublicKey = fs.readFileSync(publicKeyPath, 'utf8');
     this.rsaPrivateKey = fs.readFileSync(privateKeyPath, 'utf8');
+    if (this.usingOldRsa) {
+      this.oldRsaPublic = new NodeRSA(this.rsaPublicKey);
+      this.oldRsaPrivate = new NodeRSA(this.rsaPrivateKey);
+    }
+
   }
 
   public rsaEncrypt = (data: string) => {
@@ -35,6 +45,9 @@ class Rsa {
   }
 
   public rsaEncryptShort = (data: string) => {
+    if (this.usingOldRsa) {
+      return this.oldRsaPublic?.encrypt(data, 'base64');
+    }
     const buffer = Buffer.from(data);
     const encrypted = publicEncrypt({ key: this.rsaPublicKey, padding: 1 }, buffer);
     return encrypted.toString("base64");
@@ -54,6 +67,9 @@ class Rsa {
   }
 
   public rsaDecryptShort(data: string) {
+    if (this.usingOldRsa) {
+      return this.oldRsaPrivate?.decrypt(data, 'utf8');
+    }
     const buffer = Buffer.from(data, "base64");
     const decrypted = privateDecrypt({ key: this.rsaPrivateKey, padding: 1 }, buffer);
     return decrypted.toString("utf8");
