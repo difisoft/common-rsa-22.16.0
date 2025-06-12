@@ -46,7 +46,7 @@ class Rsa {
 
   public rsaEncryptShort = (data: string) => {
     if (this.usingOldRsa) {
-      return this.oldRsaPublic?.encrypt(data, 'base64');
+      return this.oldRsaPublic!.encrypt(data, 'base64');
     }
     const buffer = Buffer.from(data);
     const encrypted = publicEncrypt({ key: this.rsaPublicKey, padding: 1 }, buffer);
@@ -68,7 +68,7 @@ class Rsa {
 
   public rsaDecryptShort(data: string) {
     if (this.usingOldRsa) {
-      return this.oldRsaPrivate?.decrypt(data, 'utf8');
+      return this.oldRsaPrivate!.decrypt(data, 'utf8');
     }
     const buffer = Buffer.from(data, "base64");
     const decrypted = privateDecrypt({ key: this.rsaPrivateKey, padding: 1 }, buffer);

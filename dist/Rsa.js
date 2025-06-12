@@ -29,9 +29,8 @@ class Rsa {
             }
         };
         this.rsaEncryptShort = (data) => {
-            var _a;
             if (this.usingOldRsa) {
-                return (_a = this.oldRsaPublic) === null || _a === void 0 ? void 0 : _a.encrypt(data, 'base64');
+                return this.oldRsaPublic.encrypt(data, 'base64');
             }
             const buffer = Buffer.from(data);
             const encrypted = (0, crypto_1.publicEncrypt)({ key: this.rsaPublicKey, padding: 1 }, buffer);
@@ -58,9 +57,8 @@ class Rsa {
         }
     }
     rsaDecryptShort(data) {
-        var _a;
         if (this.usingOldRsa) {
-            return (_a = this.oldRsaPrivate) === null || _a === void 0 ? void 0 : _a.decrypt(data, 'utf8');
+            return this.oldRsaPrivate.decrypt(data, 'utf8');
         }
         const buffer = Buffer.from(data, "base64");
         const decrypted = (0, crypto_1.privateDecrypt)({ key: this.rsaPrivateKey, padding: 1 }, buffer);
