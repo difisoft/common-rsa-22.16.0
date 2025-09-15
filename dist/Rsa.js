@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const fs_1 = __importDefault(require("fs"));
 const crypto_1 = require("crypto");
 const node_rsa_1 = __importDefault(require("node-rsa"));
+const node_crypto_1 = require("node:crypto");
 const MULTI_ENCRYPTION_PART_PREFIX = 'mutipart';
 class Rsa {
     constructor(publicKeyPath, privateKeyPath, usingOldRsa = false) {
@@ -33,7 +34,10 @@ class Rsa {
                 return this.oldRsaPublic.encrypt(data, 'base64');
             }
             const buffer = Buffer.from(data);
-            const encrypted = (0, crypto_1.publicEncrypt)({ key: this.rsaPublicKey, padding: 1 }, buffer);
+            const encrypted = (0, crypto_1.publicEncrypt)({
+                key: this.rsaPublicKey,
+                padding: crypto_1.constants.RSA_PKCS1_PADDING
+            }, buffer);
             return encrypted.toString("base64");
         };
         this.rsaDecrypt = (data) => {
@@ -52,17 +56,34 @@ class Rsa {
         this.rsaPublicKey = fs_1.default.readFileSync(publicKeyPath, 'utf8');
         this.rsaPrivateKey = fs_1.default.readFileSync(privateKeyPath, 'utf8');
         if (this.usingOldRsa) {
-            this.oldRsaPublic = new node_rsa_1.default(this.rsaPublicKey);
-            this.oldRsaPrivate = new node_rsa_1.default(this.rsaPrivateKey);
+            this.oldRsaPublic = new node_rsa_1.default(this.rsaPublicKey, 'public', {
+                encryptionScheme: 'pkcs1',
+            });
+            this.oldRsaPublic.setOptions({
+                environment: 'browser',
+                encryptionScheme: 'pkcs1',
+                signingScheme: 'pkcs1'
+            });
+            this.oldRsaPrivate = new node_rsa_1.default(this.rsaPrivateKey, 'private', {
+                encryptionScheme: 'pkcs1',
+            });
+            this.oldRsaPrivate.setOptions({
+                environment: 'browser',
+                encryptionScheme: 'pkcs1',
+                signingScheme: 'pkcs1'
+            });
         }
     }
     rsaDecryptShort(data) {
         if (this.usingOldRsa) {
             return this.oldRsaPrivate.decrypt(data, 'utf8');
         }
-        const buffer = Buffer.from(data, "base64");
-        const decrypted = (0, crypto_1.privateDecrypt)({ key: this.rsaPrivateKey, padding: 1 }, buffer);
-        return decrypted.toString("utf8");
+        const buffer = Buffer.from(data, 'base64');
+        const decrypted = (0, node_crypto_1.privateDecrypt)({
+            key: this.rsaPrivateKey,
+            padding: crypto_1.constants.RSA_PKCS1_PADDING
+        }, buffer);
+        return decrypted.toString('utf8');
     }
     ;
 }
