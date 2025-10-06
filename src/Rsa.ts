@@ -15,6 +15,7 @@ class Rsa {
     publicKeyPath: string,
     privateKeyPath: string,
     private usingOldRsa: boolean = false,
+    private padding?: number,
   ) {
     this.rsaPublicKey = fs.readFileSync(publicKeyPath, 'utf8');
     this.rsaPrivateKey = fs.readFileSync(privateKeyPath, 'utf8');
@@ -37,6 +38,19 @@ class Rsa {
         encryptionScheme: 'pkcs1',
         signingScheme: 'pkcs1'
       });
+    }
+    if (this.padding == null) {
+      let envPadding = process.env.TRADEX_ENV_RSA_PADDING;
+      if (envPadding != null) {
+        try {
+          this.padding = parseInt(envPadding);
+        } catch (e) {
+          this.padding = constants.RSA_PKCS1_OAEP_PADDING;
+        }
+      }
+      if (this.padding == null) {
+        this.padding = constants.RSA_PKCS1_OAEP_PADDING;
+      }
     }
   }
 
@@ -66,7 +80,7 @@ class Rsa {
     const encrypted = publicEncrypt(
       { 
         key: this.rsaPublicKey,
-        padding: constants.RSA_PKCS1_PADDING
+        padding: this.padding
       }, 
       buffer
     );
@@ -94,7 +108,7 @@ class Rsa {
     const decrypted = privateDecrypt(
       { 
         key: this.rsaPrivateKey,
-        padding: constants.RSA_PKCS1_PADDING
+        padding: this.padding
       }, 
       buffer
     );
