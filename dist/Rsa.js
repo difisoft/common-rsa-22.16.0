@@ -9,8 +9,9 @@ const node_rsa_1 = __importDefault(require("node-rsa"));
 const node_crypto_1 = require("node:crypto");
 const MULTI_ENCRYPTION_PART_PREFIX = 'mutipart';
 class Rsa {
-    constructor(publicKeyPath, privateKeyPath, usingOldRsa = false) {
+    constructor(publicKeyPath, privateKeyPath, usingOldRsa = false, padding) {
         this.usingOldRsa = usingOldRsa;
+        this.padding = padding;
         this.rsaEncrypt = (data) => {
             try {
                 return this.rsaEncryptShort(data);
@@ -36,7 +37,7 @@ class Rsa {
             const buffer = Buffer.from(data);
             const encrypted = (0, crypto_1.publicEncrypt)({
                 key: this.rsaPublicKey,
-                padding: crypto_1.constants.RSA_PKCS1_PADDING
+                padding: this.padding
             }, buffer);
             return encrypted.toString("base64");
         };
@@ -73,6 +74,20 @@ class Rsa {
                 signingScheme: 'pkcs1'
             });
         }
+        if (this.padding == null) {
+            let envPadding = process.env.TRADEX_ENV_RSA_PADDING;
+            if (envPadding != null) {
+                try {
+                    this.padding = parseInt(envPadding);
+                }
+                catch (e) {
+                    this.padding = crypto_1.constants.RSA_PKCS1_OAEP_PADDING;
+                }
+            }
+            if (this.padding == null) {
+                this.padding = crypto_1.constants.RSA_PKCS1_OAEP_PADDING;
+            }
+        }
     }
     rsaDecryptShort(data) {
         if (this.usingOldRsa) {
@@ -81,7 +96,7 @@ class Rsa {
         const buffer = Buffer.from(data, 'base64');
         const decrypted = (0, node_crypto_1.privateDecrypt)({
             key: this.rsaPrivateKey,
-            padding: crypto_1.constants.RSA_PKCS1_PADDING
+            padding: this.padding
         }, buffer);
         return decrypted.toString('utf8');
     }
